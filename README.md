@@ -14,6 +14,13 @@ Welcome to our FBLA Educational coding project! This application bridges the gap
 
 ---
 
+## 📸 Visual Preview
+
+![1940s Escape Room Interface](screenshot.png)
+> *The game interface featuring the Title Screen and the interactive "Basic Details" Tech Panel.*
+
+---
+
 ## 💡 A Note for Beginners
 
 If you are looking at the source code for this game and feeling overwhelmed by the wall of text—**don't panic!** Software engineering is not magic; it is just a series of logical instructions, exactly like a cooking recipe. Every massive application in the world is built on the same foundational blocks: variables, loops, and conditional statements (`if` this, `then` that). 
