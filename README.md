@@ -62,7 +62,7 @@ While playing the game, press keys `1` through `5` on your keyboard to open the 
 
 ---
 
-## 🏗️ System Architecture (Balanced View)
+## 🏗️ System Architecture
 
 ```mermaid
 flowchart LR
