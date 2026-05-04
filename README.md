@@ -57,63 +57,64 @@ While playing the game, press keys `1` through `5` on your keyboard to open the 
 
 ## 🏗️ System Architecture & Game Flow
 
-The application relies on a continuous 60 Frames Per Second (FPS) Main Loop. Instead of a linear script, the program constantly checks for OS events, updates mathematical variables, evaluates the Finite State Machine (`state`), and renders the UI.
+The application relies on a continuous 60 Frames Per Second (FPS) Main Loop. Instead of a linear script, the program constantly checks for OS events, injects system traces, updates mathematical variables, evaluates the Finite State Machine (`state`), and renders the UI.
 
 ```mermaid
 graph TD
-    %% Styling
+    %% Styling Configuration
     classDef default fill:#1a1a1a,stroke:#00FF41,stroke-width:2px,color:#DAFFDE,font-family:monospace;
     classDef highlight fill:#0d0d0d,stroke:#F5F5DC,stroke-width:2px,color:#F5F5DC,font-weight:bold;
-    classDef endpoint fill:#00FF41,stroke:#00FF41,stroke-width:2px,color:#000,font-weight:bold;
+    classDef room fill:#0d0d0d,stroke:#00FF41,stroke-width:1px,color:#DAFFDE;
+    classDef action fill:#1a1a1a,stroke:#DAFFDE,stroke-width:1px,stroke-dasharray: 5 5;
 
-    START([Start Game]) --> INIT[Init Pygame & Load JSON Highscores]
-    INIT --> LOOP{Main 60 FPS Loop}:::highlight
+    START([Start Application]) --> LOOP{Main 60 FPS Loop}:::highlight
+    LOOP --> EVENTS[Listen for OS Inputs: Mouse & Keys 1-5]
+    EVENTS --> TRACE[Check sys.settrace Panel Hook]:::action
+    TRACE --> STATE_EVAL[Evaluate 'state' Variable]:::highlight
 
-    LOOP --> EVENTS[Event Listener]
-
-    subgraph User Input & Tracing
-        EVENTS -->|Keys 1-5 Pressed| TRACE[Toggle Tech Panel UI<br>& Inject sys.settrace hook]
-        EVENTS -->|Window Closed| QUIT[Quit Application]
-    end
-
-    TRACE --> STATE_MACHINE
-    EVENTS -- No global events --> STATE_MACHINE[Evaluate 'state' Variable]:::highlight
-
-    subgraph State Machine & Game Logic
-        STATE_MACHINE -->|TITLE| TITLE_SCENE[Draw Title Screen]
-        STATE_MACHINE -->|CHALLENGES| CHAL_SCENE[Draw Active Room & Listen for Clicks]
+    subgraph Game State Sequence & Logic Routing
+        TITLE:::room -->|Play| INST[INSTRUCTIONS]:::room
+        INST --> STRANGE_ROOM:::room --> FDR_BROADCAST:::room
+        FDR_BROADCAST --> CHAL_1{CHALLENGE 1}
         
-        CHAL_SCENE --> CHECK_ANS{Correct Button Clicked?}
-        CHECK_ANS -- Yes --> ADD_SCORE[Update: Score += 75]
-        CHECK_ANS -- No --> SUB_SCORE[Update: Score -= 50]
-
-        STATE_MACHINE -->|FINAL_DOOR| DOOR_SCENE[Draw Final Door]
-        DOOR_SCENE --> SCORE_CHECK{Score >= 200?}
-        SCORE_CHECK -- Yes --> END_SCENE
-        SCORE_CHECK -- No --> RESTART_SCENE[Reset Variables]
-
-        STATE_MACHINE -->|END| END_SCENE[Draw End Screen]
-        END_SCENE --> SAVE_IO[Save Score to JSON Disk]
-        END_SCENE --> PLAY_AGAIN{Play Again?}
-        PLAY_AGAIN -- Yes --> RESET[Reset Score & Timer to 0]
-        PLAY_AGAIN -- No --> QUIT
+        CHAL_1 -- Correct --> SYS_GLITCH[SYSTEM_GLITCH]:::room
+        SYS_GLITCH --> FACT_WORKER[FACTORY_WORKER]:::room
+        FACT_WORKER --> CHAL_2{CHALLENGE 2}
+        
+        CHAL_2 -- Correct --> CMD_POST[COMMAND_POST]:::room
+        CMD_POST --> OPPENHEIMER[ROBERT_OPPENHEIMER]:::room
+        OPPENHEIMER --> CHAL_3{CHALLENGE 3}
+        
+        CHAL_3 -- Correct --> SIM_BREACH[SIMULATION_BREACH]:::room
+        SIM_BREACH --> ANALYST[GOVERNMENT_CODE_ANALYST]:::room
+        ANALYST --> CHAL_4{CHALLENGE 4}
+        
+        CHAL_4 -- Correct --> FINAL_DOOR:::room
+        
+        FINAL_DOOR --> SCORE_CHK{Score >= 200?}
+        SCORE_CHK -- Yes --> TIME_TRAVELER:::room --> END:::room
+        SCORE_CHK -- No --> RESTART[Reset Score & Variables]:::action --> TITLE
+        
+        CHAL_1 & CHAL_2 & CHAL_3 & CHAL_4 -- Wrong --> PENALTY[Score -= 50]:::action
     end
 
-    ADD_SCORE --> RENDER
-    SUB_SCORE --> RENDER
-    TITLE_SCENE --> RENDER
-    RESET --> RENDER
-    RESTART_SCENE --> RENDER
-    SAVE_IO --> RENDER
+    STATE_EVAL -->|Routes to Active Scene| TITLE
+    
+    END --> SAVE_IO[JSON File I/O: Save Highscore]:::action
+    
+    %% Rendering flow routing
+    PENALTY -.-> RENDER
+    SAVE_IO -.-> RENDER
+    FINAL_DOOR -.-> RENDER
+    RESTART -.-> RENDER
 
-    subgraph Global UI & Engine Timing
-        RENDER[Render Visuals:<br>Background, UI Overlays, Tech Panels] --> TIMER[Track Time:<br>timer += 1]
-        TIMER --> FLIP[Push to Monitor:<br>display.flip]
-        FLIP --> CLOCK[Wait for next frame:<br>clock.tick 60]
+    subgraph Global Rendering & Engine Timing
+        RENDER[Render Graphics, UI & Active Tech Panels] --> TIMER[timer += 1]
+        TIMER --> FLIP[display.flip]
+        FLIP --> CLOCK[clock.tick 60]
     end
 
     CLOCK -.-> LOOP
-    QUIT --> EXIT([Exit Python Process]):::endpoint
 ```
 
 ---
