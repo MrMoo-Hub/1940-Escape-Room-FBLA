@@ -67,17 +67,17 @@ While playing the game, press keys `1` through `5` on your keyboard to open the 
 The application relies on a continuous 60 Frames Per Second (FPS) Main Loop. Instead of a linear script, the program constantly checks for OS events, injects system traces, updates mathematical variables, evaluates the Finite State Machine (`state`), and renders the UI.
 
 ```mermaid
-graph TD
+graph LR
     %% Styling Configuration
     classDef default fill:#1a1a1a,stroke:#00FF41,stroke-width:2px,color:#DAFFDE,font-family:monospace;
     classDef highlight fill:#0d0d0d,stroke:#F5F5DC,stroke-width:2px,color:#F5F5DC,font-weight:bold;
     classDef room fill:#0d0d0d,stroke:#00FF41,stroke-width:1px,color:#DAFFDE;
     classDef action fill:#1a1a1a,stroke:#DAFFDE,stroke-width:1px,stroke-dasharray: 5 5;
 
-    START([Start Application]) --> LOOP{Main 60 FPS Loop}:::highlight
-    LOOP --> EVENTS[Listen for OS Inputs: Mouse & Keys 1-5]
-    EVENTS --> TRACE[Check sys.settrace Panel Hook]:::action
-    TRACE --> STATE_EVAL[Evaluate 'state' Variable]:::highlight
+    START([Start Application]) --> LOOP{Main 60<br>FPS Loop}:::highlight
+    LOOP --> EVENTS[Listen for OS Inputs:<br>Mouse & Keys 1-5]
+    EVENTS --> TRACE[Check sys.settrace<br>Panel Hook]:::action
+    TRACE --> STATE_EVAL[Evaluate 'state'<br>Variable]:::highlight
 
     subgraph Game State Sequence & Logic Routing
         TITLE:::room -->|Play| INST[INSTRUCTIONS]:::room
@@ -100,14 +100,14 @@ graph TD
         
         FINAL_DOOR --> SCORE_CHK{Score >= 200?}
         SCORE_CHK -- Yes --> TIME_TRAVELER:::room --> END:::room
-        SCORE_CHK -- No --> RESTART[Reset Score & Variables]:::action --> TITLE
+        SCORE_CHK -- No --> RESTART[Reset Score<br>& Variables]:::action --> TITLE
         
         CHAL_1 & CHAL_2 & CHAL_3 & CHAL_4 -- Wrong --> PENALTY[Score -= 50]:::action
     end
 
     STATE_EVAL -->|Routes to Active Scene| TITLE
     
-    END --> SAVE_IO[JSON File I/O: Save Highscore]:::action
+    END --> SAVE_IO[JSON File I/O:<br>Save Highscore]:::action
     
     %% Rendering flow routing
     PENALTY -.-> RENDER
@@ -116,7 +116,7 @@ graph TD
     RESTART -.-> RENDER
 
     subgraph Global Rendering & Engine Timing
-        RENDER[Render Graphics, UI & Active Tech Panels] --> TIMER[timer += 1]
+        RENDER[Render Graphics, UI<br>& Active Tech Panels] --> TIMER[timer += 1]
         TIMER --> FLIP[display.flip]
         FLIP --> CLOCK[clock.tick 60]
     end
