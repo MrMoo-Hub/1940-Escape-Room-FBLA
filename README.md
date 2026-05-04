@@ -62,62 +62,75 @@ While playing the game, press keys `1` through `5` on your keyboard to open the 
 
 ---
 
-## 🏗️ System Architecture & Game Flow
-
-The game runs on a continuous **60 FPS loop**, structured into three core layers:
-
-1. **Input & Engine Control**
-2. **Game State Machine (Logic Layer)**
-3. **Rendering & Persistence (Output Layer)**
+## 🏗️ System Architecture (Enterprise View)
 
 ```mermaid
-flowchart LR
+flowchart TB
 
-%% ========== ENGINE ==========
-subgraph ENGINE["1. ENGINE LOOP (60 FPS)"]
-    LOOP["Main Loop"] 
-    INPUT["Capture Input"] 
-    TRACE["Trace Hook"] 
-    ROUTE["Evaluate State"] 
-
-    LOOP --> INPUT --> TRACE --> ROUTE
+%% ===== CLIENT INPUTS =====
+subgraph INPUTS["🎮 Client Inputs"]
+    KB["Keyboard"]
+    MS["Mouse"]
 end
 
-%% ========== LOGIC ==========
-subgraph LOGIC["2. GAME STATE MACHINE"]
-    TITLE["Title Screen"]
-    ACT1["Challenge 1"]
-    ACT2["Challenge 2"]
-    ACT3["Challenge 3"]
-    ACT4["Challenge 4"]
+%% ===== GAME SYSTEM =====
+subgraph SYSTEM["🧩 Game Engine System"]
+    
+    %% --- ENGINE CORE ---
+    subgraph ENGINE["Engine Core (60 FPS Loop)"]
+        LOOP["Main Loop"]
+        EVENTS["Process Events"]
+        TRACE["Trace Hook (sys.settrace)"]
+        STATE["Evaluate State"]
 
-    CHECK{"Score >= 200"}
-    END["End Screen"]
+        LOOP --> EVENTS --> TRACE --> STATE
+    end
 
-    TITLE --> ACT1 --> ACT2 --> ACT3 --> ACT4 --> CHECK
-    CHECK -->|Pass| END
-    CHECK -->|Fail Reset| TITLE
+    %% --- GAME LOGIC ---
+    subgraph LOGIC["Game State Machine"]
+        TITLE["Title Screen"]
+        C1["Challenge 1"]
+        C2["Challenge 2"]
+        C3["Challenge 3"]
+        C4["Challenge 4"]
+
+        CHECK{"Score >= 200"}
+        END["End Screen"]
+
+        TITLE --> C1 --> C2 --> C3 --> C4 --> CHECK
+        CHECK -->|Pass| END
+        CHECK -->|Retry| TITLE
+    end
+
+    %% --- RENDER PIPELINE ---
+    subgraph RENDER["Rendering Pipeline"]
+        DRAW["Render Scene + UI"]
+        UPDATE["Update Timer / Score"]
+        DISPLAY["Display Frame"]
+        FPS["FPS Sync"]
+
+        DRAW --> UPDATE --> DISPLAY --> FPS
+    end
 end
 
-%% ========== RENDER ==========
-subgraph RENDER["3. RENDERING"]
-    DRAW["Render Scene"]
-    TIMER["Update Timer"]
-    DISPLAY["Display Frame"]
-    FPS["FPS Sync"]
-    SAVE["Save JSON"]
-
-    DRAW --> TIMER --> DISPLAY --> FPS
+%% ===== DATA LAYER =====
+subgraph DATA["💾 Persistence Layer"]
+    JSON["JSON Save File"]
 end
 
-%% ========== CONNECTIONS ==========
-ROUTE --> TITLE
-ACT1 --> DRAW
-ACT2 --> DRAW
-ACT3 --> DRAW
-ACT4 --> DRAW
+%% ===== CONNECTIONS =====
+KB --> EVENTS
+MS --> EVENTS
 
-END --> SAVE
+STATE --> TITLE
+
+C1 --> DRAW
+C2 --> DRAW
+C3 --> DRAW
+C4 --> DRAW
+
+END --> JSON
+
 FPS --> LOOP
 ```
 
