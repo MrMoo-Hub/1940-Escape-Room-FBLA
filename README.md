@@ -18,7 +18,7 @@ Welcome to our FBLA Educational coding project! This application bridges the gap
 
 If you are looking at the source code for this game and feeling overwhelmed by the wall of text—**don't panic!** Software engineering is not magic; it is just a series of logical instructions, exactly like a cooking recipe. Every massive application in the world is built on the same foundational blocks: variables, loops, and conditional statements (`if` this, `then` that). 
 
-Dive in, break the code, change the colors, and see what happens. Making mistakes is the fastest way to learn!
+We designed this game with interactive "Tech Panels" that you can open while playing. These panels will trace the code in real-time, showing you exactly how the computer thinks as you click buttons and solve puzzles. Dive in, break the code, change the colors, and see what happens. Making mistakes is the fastest way to learn!
 
 ---
 
@@ -57,41 +57,63 @@ While playing the game, press keys `1` through `5` on your keyboard to open the 
 
 ## 🏗️ System Architecture & Game Flow
 
-The application relies on a **Finite State Machine (FSM)**. A global variable named `state` acts as a traffic cop. The 60-FPS main loop constantly checks this variable and routes the display to the appropriate scene function.
+The application relies on a continuous 60 Frames Per Second (FPS) Main Loop. Instead of a linear script, the program constantly checks for OS events, updates mathematical variables, evaluates the Finite State Machine (`state`), and renders the UI.
 
 ```mermaid
-graph TD;
+graph TD
     %% Styling
     classDef default fill:#1a1a1a,stroke:#00FF41,stroke-width:2px,color:#DAFFDE,font-family:monospace;
-    classDef highlight fill:#00FF41,stroke:#00FF41,stroke-width:2px,color:#000,font-family:monospace;
-    classDef decision fill:#0d0d0d,stroke:#F5F5DC,stroke-width:2px,color:#F5F5DC;
+    classDef highlight fill:#0d0d0d,stroke:#F5F5DC,stroke-width:2px,color:#F5F5DC,font-weight:bold;
+    classDef endpoint fill:#00FF41,stroke:#00FF41,stroke-width:2px,color:#000,font-weight:bold;
 
-    %% Nodes
-    TITLE[TITLE] --> INST[INSTRUCTIONS]
-    INST --> ROOM[STRANGE_ROOM]
-    ROOM --> FDR[FDR_BROADCAST]
-    
-    FDR --> C1[CHALLENGE 1: Lend-Lease]
-    C1 --> GLITCH[SYSTEM_GLITCH]
-    GLITCH --> FACTORY[FACTORY_WORKER]
-    
-    FACTORY --> C2[CHALLENGE 2: Timeline Events]
-    C2 --> POST[COMMAND_POST]
-    POST --> OPPENHEIMER[ROBERT_OPPENHEIMER]
-    
-    OPPENHEIMER --> C3[CHALLENGE 3: Operation Overlord]
-    C3 --> BREACH[SIMULATION_BREACH]
-    BREACH --> ANALYST[GOVERNMENT_CODE_ANALYST]
-    
-    ANALYST --> C4[CHALLENGE 4: Code Lock]
-    C4 --> DOOR[FINAL_DOOR]
-    
-    %% Logic Branch
-    DOOR --> DECISION{Score >= 200?}:::decision
-    DECISION -- No (Fail) --> RESTART[Reset Variables]:::highlight
-    RESTART --> TITLE
-    DECISION -- Yes (Pass) --> TIME[TIME_TRAVELER]
-    TIME --> END[END SCREEN / SAVE I/O]:::highlight
+    START([Start Game]) --> INIT[Init Pygame & Load JSON Highscores]
+    INIT --> LOOP{Main 60 FPS Loop}:::highlight
+
+    LOOP --> EVENTS[Event Listener]
+
+    subgraph User Input & Tracing
+        EVENTS -->|Keys 1-5 Pressed| TRACE[Toggle Tech Panel UI<br>& Inject sys.settrace hook]
+        EVENTS -->|Window Closed| QUIT[Quit Application]
+    end
+
+    TRACE --> STATE_MACHINE
+    EVENTS -- No global events --> STATE_MACHINE[Evaluate 'state' Variable]:::highlight
+
+    subgraph State Machine & Game Logic
+        STATE_MACHINE -->|TITLE| TITLE_SCENE[Draw Title Screen]
+        STATE_MACHINE -->|CHALLENGES| CHAL_SCENE[Draw Active Room & Listen for Clicks]
+        
+        CHAL_SCENE --> CHECK_ANS{Correct Button Clicked?}
+        CHECK_ANS -- Yes --> ADD_SCORE[Update: Score += 75]
+        CHECK_ANS -- No --> SUB_SCORE[Update: Score -= 50]
+
+        STATE_MACHINE -->|FINAL_DOOR| DOOR_SCENE[Draw Final Door]
+        DOOR_SCENE --> SCORE_CHECK{Score >= 200?}
+        SCORE_CHECK -- Yes --> END_SCENE
+        SCORE_CHECK -- No --> RESTART_SCENE[Reset Variables]
+
+        STATE_MACHINE -->|END| END_SCENE[Draw End Screen]
+        END_SCENE --> SAVE_IO[Save Score to JSON Disk]
+        END_SCENE --> PLAY_AGAIN{Play Again?}
+        PLAY_AGAIN -- Yes --> RESET[Reset Score & Timer to 0]
+        PLAY_AGAIN -- No --> QUIT
+    end
+
+    ADD_SCORE --> RENDER
+    SUB_SCORE --> RENDER
+    TITLE_SCENE --> RENDER
+    RESET --> RENDER
+    RESTART_SCENE --> RENDER
+    SAVE_IO --> RENDER
+
+    subgraph Global UI & Engine Timing
+        RENDER[Render Visuals:<br>Background, UI Overlays, Tech Panels] --> TIMER[Track Time:<br>timer += 1]
+        TIMER --> FLIP[Push to Monitor:<br>display.flip]
+        FLIP --> CLOCK[Wait for next frame:<br>clock.tick 60]
+    end
+
+    CLOCK -.-> LOOP
+    QUIT --> EXIT([Exit Python Process]):::endpoint
 ```
 
 ---
