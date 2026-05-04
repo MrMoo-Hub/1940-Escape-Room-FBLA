@@ -16,7 +16,7 @@ Welcome to our FBLA Educational coding project! This application bridges the gap
 
 ## 📸 Visual Preview
 
-![1940s Escape Room Interface](screenshot.jpg)
+![1940s Escape Room Interface](screenshot.png)
 > *The game interface featuring the Title Screen and the interactive "Basic Details" Tech Panel.*
 
 ---
