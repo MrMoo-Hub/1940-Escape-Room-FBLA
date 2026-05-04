@@ -62,76 +62,72 @@ While playing the game, press keys `1` through `5` on your keyboard to open the 
 
 ---
 
-## 🏗️ System Architecture (Enterprise View)
+## 🏗️ System Architecture (Balanced View)
 
 ```mermaid
-flowchart TB
+flowchart LR
 
-%% ===== CLIENT INPUTS =====
-subgraph INPUTS["🎮 Client Inputs"]
+%% ===== INPUT =====
+subgraph INPUT["🎮 Inputs"]
     KB["Keyboard"]
     MS["Mouse"]
 end
 
-%% ===== GAME SYSTEM =====
-subgraph SYSTEM["🧩 Game Engine System"]
-    
-    %% --- ENGINE CORE ---
-    subgraph ENGINE["Engine Core (60 FPS Loop)"]
+%% ===== CORE SYSTEM =====
+subgraph SYSTEM["🧩 Game Engine"]
+
+    %% ENGINE
+    subgraph ENGINE["Engine Loop"]
         LOOP["Main Loop"]
-        EVENTS["Process Events"]
-        TRACE["Trace Hook (sys.settrace)"]
-        STATE["Evaluate State"]
-
-        LOOP --> EVENTS --> TRACE --> STATE
+        EVENTS["Events"]
+        STATE["State Eval"]
     end
 
-    %% --- GAME LOGIC ---
-    subgraph LOGIC["Game State Machine"]
-        TITLE["Title Screen"]
-        C1["Challenge 1"]
-        C2["Challenge 2"]
-        C3["Challenge 3"]
-        C4["Challenge 4"]
-
+    %% LOGIC
+    subgraph LOGIC["State Machine"]
+        TITLE["Title"]
+        C1["C1"]
+        C2["C2"]
+        C3["C3"]
+        C4["C4"]
         CHECK{"Score >= 200"}
-        END["End Screen"]
-
-        TITLE --> C1 --> C2 --> C3 --> C4 --> CHECK
-        CHECK -->|Pass| END
-        CHECK -->|Retry| TITLE
     end
 
-    %% --- RENDER PIPELINE ---
-    subgraph RENDER["Rendering Pipeline"]
-        DRAW["Render Scene + UI"]
-        UPDATE["Update Timer / Score"]
-        DISPLAY["Display Frame"]
-        FPS["FPS Sync"]
-
-        DRAW --> UPDATE --> DISPLAY --> FPS
+    %% RENDER
+    subgraph RENDER["Render Pipeline"]
+        DRAW["Render"]
+        UI["Update"]
+        FRAME["Display"]
     end
+
 end
 
-%% ===== DATA LAYER =====
-subgraph DATA["💾 Persistence Layer"]
-    JSON["JSON Save File"]
+%% ===== OUTPUT =====
+subgraph OUTPUT["💾 Output"]
+    END["End Screen"]
+    SAVE["JSON Save"]
 end
 
-%% ===== CONNECTIONS =====
+%% ===== FLOW =====
 KB --> EVENTS
 MS --> EVENTS
 
+LOOP --> EVENTS --> STATE
 STATE --> TITLE
+
+TITLE --> C1 --> C2 --> C3 --> C4 --> CHECK
+
+CHECK -->|Pass| END
+CHECK -->|Retry| TITLE
 
 C1 --> DRAW
 C2 --> DRAW
 C3 --> DRAW
 C4 --> DRAW
 
-END --> JSON
+DRAW --> UI --> FRAME --> LOOP
 
-FPS --> LOOP
+END --> SAVE
 ```
 
 ---
