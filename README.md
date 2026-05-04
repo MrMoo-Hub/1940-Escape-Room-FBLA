@@ -64,64 +64,56 @@ While playing the game, press keys `1` through `5` on your keyboard to open the 
 
 ## 🏗️ System Architecture & Game Flow
 
-The application relies on a continuous 60 Frames Per Second (FPS) Main Loop. Instead of a linear script, the program constantly checks for OS events, injects system traces, updates mathematical variables, evaluates the Finite State Machine (`state`), and renders the UI.
+The application relies on a continuous 60 Frames Per Second (FPS) Main Loop. The diagram below breaks the architecture into three core vertical pillars: **Engine Inputs**, **Game Logic**, and **Output Rendering**.
 
 ```mermaid
 graph LR
     %% Styling Configuration
-    classDef default fill:#1a1a1a,stroke:#00FF41,stroke-width:2px,color:#DAFFDE,font-family:monospace;
-    classDef highlight fill:#0d0d0d,stroke:#F5F5DC,stroke-width:2px,color:#F5F5DC,font-weight:bold;
-    classDef room fill:#0d0d0d,stroke:#00FF41,stroke-width:1px,color:#DAFFDE;
-    classDef action fill:#1a1a1a,stroke:#DAFFDE,stroke-width:1px,stroke-dasharray: 5 5;
+    classDef engine fill:#1a1a1a,stroke:#00FF41,stroke-width:2px,color:#DAFFDE;
+    classDef state fill:#0d0d0d,stroke:#F5F5DC,stroke-width:2px,color:#F5F5DC;
+    classDef output fill:#1a1a1a,stroke:#DAFFDE,stroke-width:2px,stroke-dasharray: 5 5,color:#F5F5DC;
 
-    START([Start Application]) --> LOOP{Main 60<br>FPS Loop}:::highlight
-    LOOP --> EVENTS[Listen for OS Inputs:<br>Mouse & Keys 1-5]
-    EVENTS --> TRACE[Check sys.settrace<br>Panel Hook]:::action
-    TRACE --> STATE_EVAL[Evaluate 'state'<br>Variable]:::highlight
-
-    subgraph Game State Sequence & Logic Routing
-        TITLE:::room -->|Play| INST[INSTRUCTIONS]:::room
-        INST --> STRANGE_ROOM:::room --> FDR_BROADCAST:::room
-        FDR_BROADCAST --> CHAL_1{CHALLENGE 1}
+    subgraph Engine["1. ENGINE & INPUTS"]
+        direction TB
+        LOOP{60 FPS Loop}:::engine
+        EVENTS[OS Events: Mouse/Keys]:::engine
+        TRACE[sys.settrace Panel Hook]:::engine
+        EVAL[Evaluate 'state' Variable]:::engine
         
-        CHAL_1 -- Correct --> SYS_GLITCH[SYSTEM_GLITCH]:::room
-        SYS_GLITCH --> FACT_WORKER[FACTORY_WORKER]:::room
-        FACT_WORKER --> CHAL_2{CHALLENGE 2}
-        
-        CHAL_2 -- Correct --> CMD_POST[COMMAND_POST]:::room
-        CMD_POST --> OPPENHEIMER[ROBERT_OPPENHEIMER]:::room
-        OPPENHEIMER --> CHAL_3{CHALLENGE 3}
-        
-        CHAL_3 -- Correct --> SIM_BREACH[SIMULATION_BREACH]:::room
-        SIM_BREACH --> ANALYST[GOVERNMENT_CODE_ANALYST]:::room
-        ANALYST --> CHAL_4{CHALLENGE 4}
-        
-        CHAL_4 -- Correct --> FINAL_DOOR:::room
-        
-        FINAL_DOOR --> SCORE_CHK{Score >= 200?}
-        SCORE_CHK -- Yes --> TIME_TRAVELER:::room --> END:::room
-        SCORE_CHK -- No --> RESTART[Reset Score<br>& Variables]:::action --> TITLE
-        
-        CHAL_1 & CHAL_2 & CHAL_3 & CHAL_4 -- Wrong --> PENALTY[Score -= 50]:::action
+        LOOP --> EVENTS --> TRACE --> EVAL
     end
 
-    STATE_EVAL -->|Routes to Active Scene| TITLE
-    
-    END --> SAVE_IO[JSON File I/O:<br>Save Highscore]:::action
-    
-    %% Rendering flow routing
-    PENALTY -.-> RENDER
-    SAVE_IO -.-> RENDER
-    FINAL_DOOR -.-> RENDER
-    RESTART -.-> RENDER
-
-    subgraph Global Rendering & Engine Timing
-        RENDER[Render Graphics, UI<br>& Active Tech Panels] --> TIMER[timer += 1]
-        TIMER --> FLIP[display.flip]
-        FLIP --> CLOCK[clock.tick 60]
+    subgraph Logic["2. GAME STATE MACHINE"]
+        direction TB
+        TITLE[Title & Instructions]:::state
+        ACT1[Strange Room & Challenge 1]:::state
+        ACT2[System Glitch & Challenge 2]:::state
+        ACT3[Command Post & Challenge 3]:::state
+        ACT4[Code Analyst & Challenge 4]:::state
+        DOOR{Final Door: Score >= 200?}:::state
+        END[End Screen & Results]:::state
+        
+        TITLE --> ACT1 --> ACT2 --> ACT3 --> ACT4 --> DOOR
+        DOOR -- Pass --> END
+        DOOR -- Fail & Reset --> TITLE
     end
 
-    CLOCK -.-> LOOP
+    subgraph Output["3. RENDERING & PERSISTENCE"]
+        direction TB
+        RENDER[Render Graphics & Tech Panels]:::output
+        TIMER[Update Timer Math]:::output
+        FLIP[Push to Monitor]:::output
+        CLOCK[clock.tick 60]:::output
+        JSON[JSON File I/O: Save Data]:::output
+        
+        RENDER --> TIMER --> FLIP --> CLOCK
+    end
+
+    %% Interactions between the 3 Pillars
+    EVAL ==>|Routes to active scene| TITLE
+    ACT1 & ACT2 & ACT3 & ACT4 -.->|Draw requests| RENDER
+    END ==>|Trigger file save| JSON
+    CLOCK -.->|Begin next frame| LOOP
 ```
 
 ---
